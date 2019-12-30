@@ -13,7 +13,7 @@ MAX_X = 0
 # The largest Y coordinate
 MAX_Y = 0
 # Boundary
-BOUNDARY = 'x'
+BOUNDARY = '|'
 # Infnite value
 INF = -1
 # A point is surrounded by 8 other elements therefore a point can be searched up
@@ -21,6 +21,10 @@ INF = -1
 # points that are on the corner which are only surrounded by 3 or points on the
 # side which are only surrounded by 5
 MAX_SEARCH = 8
+# No currently defined previous node for shortest path
+NO_POS = (-1, -1)
+# The initial position
+INITIAL_POS = (-2, -2)
 
 class Graph:
     #Define the dimensions of the graph
@@ -56,8 +60,9 @@ class Graph:
             raise ArithmeticError("Entered end coordinates exceeds map limits")
         #Make the map look more intuitive as to where the start and end are
         # 'NS' stands for NOT_SEARCHED, 'S' stands for SEARCHED
-        toSearch = [[0 for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
-        prev     = [[(-1, -1) for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        toSearch               = [[0 for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        prev                   = [[NO_POS for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        prev[y_start][x_start] = INITIAL_POS
         self.setPointAs(x_start, y_start, 0) #Set distance to 0
         #Setup the queue -> Based on the position of the graph
         currQ    = set()
@@ -80,12 +85,22 @@ class Graph:
                     #Check if distance is shorter than it was originally
                     if ( alt_dist < self.graph[alt_y][alt_x] or self.graph[alt_y][alt_x] == INF):
                         self.graph[alt_y][alt_x] = alt_dist
+                        prev[alt_y][alt_x] = (curr_x, curr_y)
             toSearch[curr_y][curr_x] += 1
+
+        #From the destination work backwards to generate the path
+        path = (x_end, y_end)
+        while ( path != (x_start, y_start) ):
+            (curr_x, curr_y) = prev[path[1]][path[0]]
+            path = (curr_x, curr_y)
+            self.graph[curr_y][curr_x] = '-'
+            print(path)
+        self.printGraph()
 
 #Traversal algorithm
 # Set of coordinates that represent the position not yet visited
 if __name__ == "__main__":
-    graph = Graph(16, 8)
+    graph = Graph(16, 16)
     gate = graph.setBoundary([(3, y) for y in range(2, MAX_Y-1)])
-    graph.traverse(6, 3, 5, 5)
-    graph.printGraph()
+    graph.traverse(6, 3, 15, 5)
+    #graph.printGraph()
