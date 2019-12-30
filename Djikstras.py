@@ -6,12 +6,16 @@ The array can have obstacles which are represented with 'o'
 from array import *
 import math
 
-#The lowest number that represents a valid coordinate
+# The lowest number that represents a valid coordinate
 MIN = 0
-#The largest X coordinate
+# The largest X coordinate
 MAX_X = 0
-#The largest Y coordinate
+# The largest Y coordinate
 MAX_Y = 0
+# Boundary
+BOUNDARY = 'x'
+# Infnite value
+INF = -1
 # A point is surrounded by 8 other elements therefore a point can be searched up
 # to 8 times before it has been oversearched. This is not taking into account
 # points that are on the corner which are only surrounded by 3 or points on the
@@ -27,7 +31,7 @@ class Graph:
         MAX_Y = dim_y
         #Defining a 2D array with distances set as -1 (for infinitely long)
         #All adjascent coordinates are length 1 away
-        self.graph = [[-1 for x in range(self.cols)] for y in range(self.rows)]
+        self.graph = [[INF for x in range(self.cols)] for y in range(self.rows)]
 
     def printGraph(self):
         for item in self.graph:
@@ -36,8 +40,14 @@ class Graph:
     def setPointAs(self, x_coord, y_coord, val):
         self.graph[y_coord][x_coord] = val
 
+    def setBoundary(self, coords):
+        for coord in coords:
+            (x, y) = coord
+            self.graph[y][x] = BOUNDARY
+
     def withinBounds(self, x_coord, y_coord):
-        return (x_coord >= MIN and x_coord < MAX_X) and (y_coord >= MIN and y_coord < MAX_Y)
+        return (x_coord >= MIN and x_coord < MAX_X) \
+            and (y_coord >= MIN and y_coord < MAX_Y) and self.graph[y_coord][x_coord] != BOUNDARY
     #traverse a path diven the starting and ending position in the graph
     def traverse(self, x_start, y_start, x_end, y_end):
         if (not self.withinBounds(x_start, y_start)):
@@ -55,6 +65,7 @@ class Graph:
         while len(currQ) > 0:
             (curr_x, curr_y) = currQ.pop()
             dist = self.graph[curr_y][curr_x] #Rows are defined first then the columns
+            # Check the positions of all the neighbours
             intPos = [[(intx, inty) for intx in range(curr_x-1, curr_x+2)]
                         for inty in range(curr_y-1, curr_y+2)]
             for coord in intPos:
@@ -67,7 +78,7 @@ class Graph:
                     alt_dist = dist + math.sqrt(math.pow(alt_x-curr_x, 2) + math.pow(alt_y-curr_y, 2))
                     alt_dist = float("%.1f" % alt_dist)
                     #Check if distance is shorter than it was originally
-                    if ( alt_dist < self.graph[alt_y][alt_x] or self.graph[alt_y][alt_x] == -1):
+                    if ( alt_dist < self.graph[alt_y][alt_x] or self.graph[alt_y][alt_x] == INF):
                         self.graph[alt_y][alt_x] = alt_dist
             toSearch[curr_y][curr_x] += 1
 
@@ -75,5 +86,6 @@ class Graph:
 # Set of coordinates that represent the position not yet visited
 if __name__ == "__main__":
     graph = Graph(16, 8)
-    graph.traverse(0, 7, 5, 5)
+    gate = graph.setBoundary([(3, y) for y in range(2, MAX_Y-1)])
+    graph.traverse(6, 3, 5, 5)
     graph.printGraph()
