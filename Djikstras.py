@@ -4,6 +4,7 @@ The array can have obstacles which are represented with 'o'
 
 '''
 from array import *
+import math
 
 #The lowest number that represents a valid coordinate
 MIN = 0
@@ -11,6 +12,11 @@ MIN = 0
 MAX_X = 0
 #The largest Y coordinate
 MAX_Y = 0
+# A point is surrounded by 8 other elements therefore a point can be searched up
+# to 8 times before it has been oversearched. This is not taking into account
+# points that are on the corner which are only surrounded by 3 or points on the
+# side which are only surrounded by 5
+MAX_SEARCH = 8
 
 class Graph:
     #Define the dimensions of the graph
@@ -39,12 +45,12 @@ class Graph:
         if (not self.withinBounds(x_end, y_end)):
             raise ArithmeticError("Entered end coordinates exceeds map limits")
         #Make the map look more intuitive as to where the start and end are
-        toSearch = [[(x, y) for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        # 'NS' stands for NOT_SEARCHED, 'S' stands for SEARCHED
+        toSearch = [[0 for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
         prev     = [[(-1, -1) for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
         self.setPointAs(x_start, y_start, 0) #Set distance to 0
         #Setup the queue -> Based on the position of the graph
         currQ    = set()
-        Visited  = set()
         currQ.add((x_start, y_start))
         while len(currQ) > 0:
             (curr_x, curr_y) = currQ.pop()
@@ -53,11 +59,21 @@ class Graph:
                         for inty in range(curr_y-1, curr_y+2)]
             for coord in intPos:
                 for pos in coord:
-                    if (not self.withinBounds(pos[0], pos[1])): continue
-                    print(pos[0], pos[1])
+                    (alt_x, alt_y) = pos
+                    if (not self.withinBounds(alt_x, alt_y)): continue
+                    if (toSearch[alt_y][alt_x] >= MAX_SEARCH): continue
+                    currQ.add((alt_x, alt_y))
+                    #Find the distance between the current position and the next
+                    alt_dist = dist + math.sqrt(math.pow(alt_x-curr_x, 2) + math.pow(alt_y-curr_y, 2))
+                    alt_dist = float("%.1f" % alt_dist)
+                    #Check if distance is shorter than it was originally
+                    if ( alt_dist < self.graph[alt_y][alt_x] or self.graph[alt_y][alt_x] == -1):
+                        self.graph[alt_y][alt_x] = alt_dist
+            toSearch[curr_y][curr_x] += 1
 
 #Traversal algorithm
 # Set of coordinates that represent the position not yet visited
 if __name__ == "__main__":
     graph = Graph(16, 8)
     graph.traverse(0, 7, 5, 5)
+    graph.printGraph()
