@@ -1,6 +1,7 @@
 '''
 The graph is defined by a 2D array.
-The array can have obstacles which are represented with 'o'
+
+Author: Rajiv Narayan
 
 '''
 from array import *
