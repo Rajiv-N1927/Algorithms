@@ -21,6 +21,11 @@ class PriorityQueue:
         else: # For testing
             raise TypeError("The input data must be a size 3 tuple, containing\
             in the form (x_coord, y_coord, fScore)")
+    def contains(self, pos):
+        for d in self.queue:
+            pos_x, pos_y, fScore = d
+            if ( (pos_x, pos_y) == pos ): return 1
+        return 0
     # for popping an element based on fScore Priority
     def pop(self):
         try:

@@ -61,6 +61,15 @@ class Graph:
     def heuristic(self, pos, dest):
         return 0
 
+    def path(self, path_arr, start, end):
+        pos = (end[0], end[1])
+        while ( pos != (start[0], start[1]) ):
+            (curr_x, curr_y) = path_arr[pos[1]][pos[0]]
+            pos = (curr_x, curr_y)
+            self.graph[curr_y][curr_x] = '-'
+        self.graph[start[1]][start[0]] = 'x'
+        self.graph[end[1]][end[0]]     = 'x'
+        self.printGraph()
     #traverse a path diven the starting and ending position in the graph
     def traverse(self, start_pos, end_pos, heuristic):
         (x_start, y_start) = start_pos
@@ -72,8 +81,7 @@ class Graph:
         self.graph[y_start][x_start] = 0
         #Copying Wikipedia
         openSet = PQ()
-
-        prevMap = [[NO_POS for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        prev = [[NO_POS for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
         #gScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
         self.graph[y_start][x_start] = 0
         fScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
@@ -81,10 +89,14 @@ class Graph:
         # Checks for the nodes that have already been visited
         toSearch = [[[] for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
         openSet.insert((x_start, y_start, fScore[y_start][x_start]))
+        # Go through the algorithm
         while ( openSet.size() > 0 ):
             (curr_x, curr_y) = openSet.pop()
-            if ( (curr_x, curr_y) == end_pos )
-                return 0xAB12
+            if ( (curr_x, curr_y) == end_pos ):
+                for f in fScore:
+                    print(f)
+                print("\n\n")
+                return self.path(prev, start_pos, end_pos)
             # Check the positions of all the neighbours
             intPos = [[(intx, inty) for intx in range(curr_x-1, curr_x+2)]
                         for inty in range(curr_y-1, curr_y+2)]
@@ -98,19 +110,19 @@ class Graph:
                     gScore = self.graph[curr_y][curr_x]
                     #Find the distance between the current position and the next
                     t_gScore = gScore + math.sqrt(math.pow(alt_x-curr_x, 2) + math.pow(alt_y-curr_y, 2))
-                    t_gScore = float("%.1f" % alt_dist)
+                    t_gScore = float("%.1f" % t_gScore)
                     #Check if distance is shorter than it was originally
                     if ( t_gScore < self.graph[alt_y][alt_x]):
                         self.graph[alt_y][alt_x] = t_gScore
                         prev[alt_y][alt_x] = (curr_x, curr_y)
-
                         fScore[alt_y][alt_x] = self.graph[alt_y][alt_x]
-                            + heuristic((alt_x, alt_y), end_pos)
+                        + heuristic((alt_x, alt_y), end_pos)
                         # Add to the current Queue
-                        openSet.insert((alt_x, alt_y), 1)
+                        if ( not openSet.contains((alt_x, alt_y)) ):
+                            openSet.insert((alt_x, alt_y, fScore[alt_y][alt_x]))
 
 if __name__ == "__main__":
-    graph = Graph(16, 16)
+    graph = Graph(8, 8)
     gate = graph.setBoundary([(3, y) for y in range(2, MAX_Y-1)])
-    graph.traverse((6, 3), (15, 5), graph.heuristic)
-    graph.printGraph()
+    graph.traverse((2, 3), (6, 5), graph.heuristic)
+    #graph.printGraph()
