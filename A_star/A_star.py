@@ -1,11 +1,16 @@
 '''
 The graph is defined by a 2D array.
 
+The graph is traversed using a diagonal based approach. That is going
+up, down, left or right is considered 1 unit and going diagonal is considered
+sqrt(2).
+
 Author: Rajiv Narayan
 
 '''
 from array import *
 import math
+from Priority_Queue import PriorityQueue as PQ
 
 # The lowest number that represents a valid coordinate
 MIN = 0
@@ -49,28 +54,37 @@ class Graph:
         for coord in coords:
             (x, y) = coord
             self.graph[y][x] = BOUNDARY
-
     def withinBounds(self, x_coord, y_coord):
         return (x_coord >= MIN and x_coord < MAX_X) \
             and (y_coord >= MIN and y_coord < MAX_Y) and self.graph[y_coord][x_coord] != BOUNDARY
+
+    def heuristic(self, pos, dest):
+        return 0
+
     #traverse a path diven the starting and ending position in the graph
-    def traverse(self, x_start, y_start, x_end, y_end):
+    def traverse(self, start_pos, end_pos, heuristic):
+        (x_start, y_start) = start_pos
+        (x_end, y_end) = end_pos
         if (not self.withinBounds(x_start, y_start)):
             raise ArithmeticError("Entered start coordinates exceeds map limits")
         if (not self.withinBounds(x_end, y_end)):
             raise ArithmeticError("Entered end coordinates exceeds map limits")
-        #Make the map look more intuitive as to where the start and end are
-        # 'NS' stands for NOT_SEARCHED, 'S' stands for SEARCHED
-        toSearch               = [[[] for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
-        prev                   = [[NO_POS for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
-        prev[y_start][x_start] = INITIAL_POS
-        self.setPointAs(x_start, y_start, 0) #Set distance to 0
-        #Setup the queue -> Based on the position of the graph
-        currQ    = set()
-        currQ.add((x_start, y_start))
-        while len(currQ) > 0:
-            (curr_x, curr_y) = currQ.pop()
-            dist = self.graph[curr_y][curr_x] #Rows are defined first then the columns
+        self.graph[y_start][x_start] = 0
+        #Copying Wikipedia
+        openSet = PQ()
+
+        prevMap = [[NO_POS for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        #gScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
+        self.graph[y_start][x_start] = 0
+        fScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
+        fScore[y_start][x_start] = heuristic(start_pos, end_pos)
+        # Checks for the nodes that have already been visited
+        toSearch = [[[] for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
+        openSet.insert((x_start, y_start, fScore[y_start][x_start]))
+        while ( openSet.size() > 0 ):
+            (curr_x, curr_y) = openSet.pop()
+            if ( (curr_x, curr_y) == end_pos )
+                return 0xAB12
             # Check the positions of all the neighbours
             intPos = [[(intx, inty) for intx in range(curr_x-1, curr_x+2)]
                         for inty in range(curr_y-1, curr_y+2)]
@@ -79,30 +93,24 @@ class Graph:
                     (alt_x, alt_y) = pos
                     if (not self.withinBounds(alt_x, alt_y)): continue
                     if ((alt_x, alt_y) in toSearch[curr_y][curr_x]): continue
-                    currQ.add((alt_x, alt_y))
                     toSearch[alt_y][alt_x].insert(0, (curr_x, curr_y))
+                    # Get the distance of the node from the starting position
+                    gScore = self.graph[curr_y][curr_x]
                     #Find the distance between the current position and the next
-                    alt_dist = dist + math.sqrt(math.pow(alt_x-curr_x, 2) + math.pow(alt_y-curr_y, 2))
-                    alt_dist = float("%.1f" % alt_dist)
+                    t_gScore = gScore + math.sqrt(math.pow(alt_x-curr_x, 2) + math.pow(alt_y-curr_y, 2))
+                    t_gScore = float("%.1f" % alt_dist)
                     #Check if distance is shorter than it was originally
-                    if ( alt_dist < self.graph[alt_y][alt_x]):
-                        self.graph[alt_y][alt_x] = alt_dist
+                    if ( t_gScore < self.graph[alt_y][alt_x]):
+                        self.graph[alt_y][alt_x] = t_gScore
                         prev[alt_y][alt_x] = (curr_x, curr_y)
-        #From the destination work backwards to generate the path
-        path = (x_end, y_end)
-        while ( path != (x_start, y_start) ):
-            (curr_x, curr_y) = prev[path[1]][path[0]]
-            path = (curr_x, curr_y)
-            self.graph[curr_y][curr_x] = '-'
-            print(path)
-        self.graph[y_start][x_start] = 'x'
-        self.graph[y_end][x_end]     = 'x'
-        self.printGraph()
 
-#Traversal algorithm
-# Set of coordinates that represent the position not yet visited
+                        fScore[alt_y][alt_x] = self.graph[alt_y][alt_x]
+                            + heuristic((alt_x, alt_y), end_pos)
+                        # Add to the current Queue
+                        openSet.insert((alt_x, alt_y), 1)
+
 if __name__ == "__main__":
-    graph = Graph(22, 22)
+    graph = Graph(16, 16)
     gate = graph.setBoundary([(3, y) for y in range(2, MAX_Y-1)])
-    graph.traverse(2, 3, 17, 15)
-    #graph.printGraph()
+    graph.traverse((6, 3), (15, 5), graph.heuristic)
+    graph.printGraph()
