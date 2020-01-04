@@ -31,6 +31,9 @@ MAX_SEARCH = 8
 NO_POS = (-1, -1)
 # The initial position
 INITIAL_POS = (-2, -2)
+# The distance from one square to another
+D  = 1
+D2 = math.sqrt(2)
 
 class Graph:
     #Define the dimensions of the graph
@@ -59,7 +62,9 @@ class Graph:
             and (y_coord >= MIN and y_coord < MAX_Y) and self.graph[y_coord][x_coord] != BOUNDARY
 
     def heuristic(self, pos, dest):
-        return 0
+        dx = abs(pos[0] - dest[0])
+        dy = abs(pos[1] - dest[1])
+        return D * ( dx + dy ) + ( D2 - 2*D ) * min(dx, dy)
 
     def path(self, path_arr, start, end):
         pos = (end[0], end[1])
@@ -85,7 +90,7 @@ class Graph:
         #gScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
         self.graph[y_start][x_start] = 0
         fScore  = [[INF for x in range(self.cols)] for y in range(self.rows)]
-        fScore[y_start][x_start] = heuristic(start_pos, end_pos)
+        fScore[y_start][x_start] = float("%.1f" % heuristic(start_pos, end_pos))
         # Checks for the nodes that have already been visited
         toSearch = [[[] for x in range(0, MAX_X)] for y in range(0, MAX_Y)]
         openSet.insert((x_start, y_start, fScore[y_start][x_start]))
@@ -115,14 +120,14 @@ class Graph:
                     if ( t_gScore < self.graph[alt_y][alt_x]):
                         self.graph[alt_y][alt_x] = t_gScore
                         prev[alt_y][alt_x] = (curr_x, curr_y)
-                        fScore[alt_y][alt_x] = self.graph[alt_y][alt_x]
-                        + heuristic((alt_x, alt_y), end_pos)
+                        fScore[alt_y][alt_x] = float("%.1f" % (self.graph[alt_y][alt_x]
+                        + heuristic((alt_x, alt_y), end_pos)) )
                         # Add to the current Queue
-                        if ( not openSet.contains((alt_x, alt_y)) ):
+                        if ( openSet.contains((alt_x, alt_y)) == 0 ):
                             openSet.insert((alt_x, alt_y, fScore[alt_y][alt_x]))
 
 if __name__ == "__main__":
-    graph = Graph(8, 8)
+    graph = Graph(15, 15)
     gate = graph.setBoundary([(3, y) for y in range(2, MAX_Y-1)])
-    graph.traverse((2, 3), (6, 5), graph.heuristic)
+    graph.traverse((1, 3), (6, 14), graph.heuristic)
     #graph.printGraph()
